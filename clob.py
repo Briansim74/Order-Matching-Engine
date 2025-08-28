@@ -128,6 +128,8 @@ def query(specific_ticker, id):
         order_book[ticker][side][price].append(volume)
   
   # Snapshot of order book for specific ticker
+  print('Printing OrderBook ----')
+  
   # Sells
   current_sorted_sells = sorted(order_book[specific_ticker]['Sell'], reverse = True)
   for sell_price in current_sorted_sells:
@@ -147,4 +149,6 @@ def query(specific_ticker, id):
   print('End')
 
 
-query(1131, 42321)
+while True:
+  specific_ticker, id = input("Query: ").split()
+  query(int(specific_ticker), int(id))
