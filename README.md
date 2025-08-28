@@ -35,3 +35,5 @@ While iterating through the dataframe, market orders will be filled and killed (
 For limit orders, the current limit order would first check if it meets criteria for immediate trading. For a buy, the lowest ask will be compared against the buy price of the limit order. Orders will be filled until ask price exceeds limit buy price. Vice versa for a sell. Afterwards, remaining orders would be added to the order_book.
 
 Finally, a snapshot for the specific ticker will be requested, where outstanding orders are sorted from highest to lowest price.
+
+Example queries can be seen.
