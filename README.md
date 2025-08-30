@@ -1,9 +1,8 @@
-# Central-Limit-Order-Book
+# Order Matching Engine
+Query Snapshot of Central Limit Order Book within the Market Order Matching Engine
 
-Query Snapshot of Central Limit Order Book
 
-
-In this notebook, I will be demonstrating the workings of the Central Limit Order Book for Market and Limit Orders:
+In this notebook, I will be demonstrating the workings of the Order Matching Engine. The engine manages the Central Limit Order Book for Market and Limit Orders. Snapshots can be queried for specific tickers to view current outstanding ticker orders.
 
 clob.ipynb
 
