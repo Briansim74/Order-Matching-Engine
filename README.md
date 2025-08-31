@@ -27,7 +27,7 @@ Limit orders are submitted with a specified maximum price to be paid or minimum 
 
 In my code, I will be querying a specific ticker (e.g. 1111) by parsing all orders up to the specific ID. Then, a snapshot of the outstanding orders of the 1111 tickers on the order book would be printed.
 
-The code can be split up into 2 major parts: Market & Limit Orders. I will first create an order_book, which is a defaultdict comprised of 'Buy' and 'Sell' deque defaultdicts. This is to allow us to place time priority for specific prices of orders. (E.g. ID 2 for ticker 2313 'Buy' 150 @ 73.4 vs ID 7 for ticker 2313 'Buy' 200 @ 73.4. ID 2 will be placed in a higher priority than ID 7 due to FIFO at that specific trading price.)
+The code can be split up into 2 major parts: Market & Limit Orders. I will first create an order_book, which is a defaultdict comprised of 'Buy' and 'Sell'. Within each 'Buy' or 'Sell' key, will be individual defaultdicts, where the key is the price of the order, and the value would house a deque full of volume orders, ordered in FIFO. This is to allow us to place price and time priority for specific prices of orders. Buy orders will try to be first matched to the lowest ask price, and ask orders will try to be first to the highest bid price. (E.g. ID 2 for ticker 2313 'Buy' 150 @ 73.4 vs ID 7 for ticker 2313 'Buy' 200 @ 73.4. ID 2 will be placed in a higher priority than ID 7 due to FIFO at that specific trading price.)
 
 While iterating through the dataframe, market orders will be filled and killed (Immediate or Cancel Order). For a buy, the current lowest ask and earliest order will be filled first. Vice versa to a sell.
 
