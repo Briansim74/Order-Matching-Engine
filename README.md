@@ -1,5 +1,5 @@
 # Order Matching Engine
-Query Snapshot of Central Limit Order Book within the Market Order Matching Engine
+Query Snapshots of Central Limit Order Book within the Order Matching Engine
 
 
 In this notebook, I will be demonstrating the workings of the Order Matching Engine. The engine manages the Central Limit Order Book for Market and Limit Orders. Snapshots can be queried for specific tickers to view current outstanding ticker orders.
