@@ -147,6 +147,7 @@ The generated CSV file is compatible with the C++ matching engine with Cancel-En
 | Cancel Order Support          | Cancel outstanding limit orders by referencing order ID                      |
 
 ## Sample CSV Output Format
+```csv
 ID	Ticker	Action	Type	Side	Price	Volume	Cancel_Target_ID
 0	2211	Add	M	Sell	-1	402	-1
 1	1131	Add	M	Sell	-1	380	-1
@@ -154,6 +155,7 @@ ID	Ticker	Action	Type	Side	Price	Volume	Cancel_Target_ID
 3	1131	Add	M	Buy	-1	558	-1
 4	-1	Cancel	-1	-1	-1	-1	2
 5	2313	Add	M	Buy	-1	138	-1
+```
 
 | Field                         | Description                                                                  |
 | ------------------------------|------------------------------------------------------------------------------|
@@ -170,6 +172,7 @@ ID	Ticker	Action	Type	Side	Price	Volume	Cancel_Target_ID
 Here is how the engine behaves during a typical query session:
 
 ### C++ (Add-Only Orders)
+### C++ Entering Query
 <img width="412" height="28" alt="Input Query C++" src="https://github.com/user-attachments/assets/ebb46dbd-4e9c-4c48-8512-7db8c402aacd" />
 
 ### With trading ladder view
