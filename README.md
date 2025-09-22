@@ -5,9 +5,9 @@ A fast, extensible Central Limit Order Book (CLOB) simulation written in C++ and
 This project simulates a Central Limit Order Book (CLOB), which most modern exchanges use to match buy and sell orders. The engine maintains a live book of outstanding orders and matches them using price-time priority.
 
 ## This repository includes:
-- A C++ order matching engine with cancel order and PnL tracking support (clob.exe / clob.cpp)
-- A Python version for prototyping and conceptual understanding (clob.py)
-- A C++ CSV generator to create randomized order flows with cancel logic (csv_generator.exe / csv_generator.cpp)
+- A C++ order matching engine with cancel order and PnL tracking support
+- A Python version for prototyping and conceptual understanding
+- A C++ CSV generator to create randomized order flows with cancel logic
 
 ## Features
 
@@ -22,13 +22,13 @@ This project simulates a Central Limit Order Book (CLOB), which most modern exch
 | C++ & Python           | Dual implementation for learning and conceptual understanding                    |
 
 ## Project Structure
-- clob.cpp # C++ Order Matching Engine
-- clob.exe # Compiled C++ Executable (Windows)
-- clob.py  # Python Order Matching Engine
-- csv_generator.cpp # CSV order generator
-- csv_generator.exe # Compiled C++ Executive (Windows)
-- orders-confirmed.csv # Sample order flow csv (Add only)
-- orders-confirmed-with-cancels.csv # Sample order flow csv (Add and Cancels)
+- clob.cpp (C++ Order Matching Engine)
+- clob.exe (Compiled C++ Executable)
+- clob.py  (Python Order Matching Engine)
+- csv_generator.cpp (CSV order generator)
+- csv_generator.exe (Compiled C++ Executive)
+- orders-confirmed.csv (Sample order flow csv - Add only)
+- orders-confirmed-with-cancels.csv (Sample order flow csv - Add and Cancels)
 - csv.h (Fast C++ csv parser library for parsing csv inputs)
 
 ## How it works
