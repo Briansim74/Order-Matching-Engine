@@ -1,38 +1,191 @@
 # Order Matching Engine with Cancel & PnL Functionality
-Query Snapshots of Central Limit Order Book within the Order Matching Engine
+A fast, extensible Central Limit Order Book (CLOB) simulation written in C++ and Python, capable of processing Market and Limit Orders, tracking Profit & Loss (PnL), and handling cancelled orders. You can query snapshots of the order book at any time to inspect the state of outstanding orders for specific tickers.
 
+## Project Overview
+This project simulates a Central Limit Order Book (CLOB), which most modern exchanges use to match buy and sell orders. The engine maintains a live book of outstanding orders and matches them using price-time priority.
 
-In this notebook, I will be demonstrating the workings of the Order Matching Engine. The engine manages the Central Limit Order Book for Market and Limit Orders. Snapshots can be queried for specific tickers to view current outstanding ticker orders.
+## This repository includes:
+- A C++ order matching engine with cancel order and PnL tracking support (clob.exe / clob.cpp)
+- A Python version for prototyping and conceptual understanding (clob.py)
+- A C++ CSV generator to create randomized order flows with cancel logic (csv_generator.exe / csv_generator.cpp)
 
-clob.ipynb
+## Features
 
-Firstly, I will be importing a csv file with the following columns:
+| Feature                | Description                                                                      |
+| -----------------------|----------------------------------------------------------------------------------|
+| Limit & Market Orders  | Supports both limit and market order types                                       |
+| FIFO Matching          | Orders at the same price level are matched by time priority (First-In-First-Out) |
+| Cancel Orders          | Cancel outstanding limit orders by referencing order ID                          |
+| PnL Tracking           | Tracks cumulative PnL from matched trades                                        |
+| CSV Order Generator    | Generates randomized test data with cancel logic                                 |
+| Snapshot Querying      | View order book state at any time for a specific ticker                          |
+| C++ & Python           | Dual implementation for learning and conceptual understanding                    |
 
-ID
-Ticker
-Type - ('Market Order' / 'Limit Order')
-Side - ('Buy' / 'Sell')
-Price
-Volume (Trading Volume)
+## Project Structure
+- clob.cpp # C++ Order Matching Engine
+- clob.exe # Compiled C++ Executable (Windows)
+- clob.py  # Python Order Matching Engine
+- csv_generator.cpp # CSV order generator
+- csv_generator.exe # Compiled C++ Executive (Windows)
+- orders-confirmed.csv # Sample order flow csv (Add only)
+- orders-confirmed-with-cancels.csv # Sample order flow csv (Add and Cancels)
+- csv.h (Fast C++ csv parser library for parsing csv inputs)
 
-Most exchanges around the world use a central limit order book. In a typical market, buyers and sellers must submit orders to a central limit order book, which aggregates and matches all outstanding buy and sell orders. Orders are submitted to an order book and are filled according to price-time priority; matched first by best price followed by time(first in first out). If they are not filled immediately, they can become part of the order book which records all the buy and sell orders at different price levels. 
+## How it works
 
-There are two main order types in most CLOB and we will be exploring them today. They are Market Orders and Limit Orders.
+### Order Matching Logic
+The engine maintains an order_book, structured as:
 
-Market Orders
-Market orders execute at the best possible price of the instrument with the purpose of filling the entire volume of the order. If an order book receives a market order to buy X volume of instrument Y, the order will be matched by sell orders in the order book by price-time priority until the X volume is fully filled or if there are no more sell orders available. If the market order cannot be fully filled, the remaining order will be killed, and it will not reside in the order book.
+```cpp
+unordered_map<int, unordered_map<string, map<double, deque<Order>>>>
+//             ^                    ^           ^           ^
+//           ticker               side        price    order queue (FIFO)
+```
 
-Limit Orders
-Limit orders are submitted with a specified maximum price to be paid or minimum price to be received for a given volume of an instrument. Limit order to buy will be filled by sell orders on the order book with price less than or equal to the specified limit price. Limit order to sell will be filled by buy orders on the order book with price greater than or equal to the specified limit price. The limit order will be filled by price-time priority. If the limit order is not fully filled, it will remain on the order book at the specified limit price waiting to be filled by future orders.
+- Buy orders match the lowest sell price first
+- Sell orders match the highest buy price first
+- Market orders are immediate or cancel (IOC)
+- Limit orders match if possible, otherwise, they are added to the book
 
-In my code, I will be querying a specific ticker (e.g. 1111) by parsing all orders up to the specific ID. Then, a snapshot of the outstanding orders of the 1111 tickers on the order book would be printed.
+## Cancel Orders
+Limit orders can be cancelled using their unique order ID. When a cancel order is processed, the engine:
+- Finds the corresponding price level and side
+- Removes the order from the FIFO queue
+- Deletes empty queues to keep the book clean
 
-The code can be split up into 2 major parts: Market & Limit Orders. I will first create an order_book, which is a defaultdict comprised of 'Buy' and 'Sell'. Within each 'Buy' or 'Sell' key, will be individual defaultdicts, where the key is the price of the order, and the value would house a deque full of volume orders, ordered in FIFO (First-In-First-Out). This is to allow us to place price and time priority for specific prices of orders. Buy orders will try to be first matched to the lowest ask price, and ask orders will try to be first to the highest bid price. (E.g. ID 2 for ticker 2313 'Buy' 150 @ 73.4 vs ID 7 for ticker 2313 'Buy' 200 @ 73.4. ID 2 will be placed in a higher priority than ID 7 due to FIFO at that specific trading price.)
+## PnL Calculation
+PnL is tracked as:
+- Positive for market buys (Lifting Offers)
+- Negative for market sells (Hitting Bids)
 
-While iterating through the dataframe, market orders will be filled and killed (Immediate or Cancel Order). For a buy, the current lowest ask and earliest order will be filled first. Vice versa to a sell.
+Cancelled orders are not included in the PnL calculation as they are never matched.
 
-For limit orders, the current limit order would first check if it meets criteria for immediate trading. For a buy, the lowest ask will be compared against the buy price of the limit order. Orders will be filled until ask price exceeds limit buy price. Vice versa for a sell. Afterwards, remaining orders would be added to the order_book.
+## Getting Started
+1. Compile the C++ engine
 
-Finally, a snapshot for the specific ticker will be requested, where outstanding orders are sorted from highest to lowest price.
+g++ -std=c++17 -O2 -o engine clob.cpp
 
-Example queries can be seen.
+2. Run the Engine
+
+./clob.exe
+
+You'll be prompted:
+
+Please enter Ticker and max_id (or -1 -1 to quit):
+
+- Ticker: Numeric ticker symbol (e.g. 1131)
+- max_id: Maximum order ID to process (e.g. 42321)
+
+### Modes of Operation
+The engine supports two modes depending on how you want the order data to be processed:
+
+### Basic Mode (Add-Only orders) - Default
+This is the active code in the main() function, and processes only Add orders, using orders-confirmed.csv. Additionally, the traditional snapshot format (ob.query_ticker_snapshot(ticker)) is commented out, and currently the standard trading ladder format (ob.query_ticker(ticker)) is used. This can also be uncommented to view the other format.
+
+```cpp
+// Data with only Add orders
+ob.reset(); // reset order_book
+
+vector<Order> orders = ob.load_orders_from_csv(filename, max_id); //load orders up to max_id
+ob.process_orders(orders);
+ob.query_pnl();
+ob.query_ticker(ticker);
+// ob.query_ticker_snapshot(ticker);
+```
+
+This is useful for:
+- Debugging core matching logic
+- Understanding basic PnL behaviour
+
+### Cancel-Enabled Mode (Add & Cancel Orders)
+This can be enabled by uncommenting the block near the bottom of main():
+
+```cpp
+// // Data with Add and Cancel orders
+// ob.reset(); // reset order_book
+
+// vector<Order> orders = ob.load_orders_from_csv_with_add_and_cancel(filename_with_add_and_cancel, max_id); //load orders up to max_id
+// ob.process_orders_with_add_and_cancel(orders);
+// ob.query_pnl();
+// ob.query_ticker(ticker);
+// ob.query_ticker_snapshot(ticker);
+```
+
+In this mode, the engine handles:
+- Market & Limit orders (Add)
+- Cancel Limit orders (By ID)
+
+This mode is ideal for:
+- Simulating real exchange behaviour
+- Validating cancel logic
+- Accurate PnL tracking
+
+### Alternative CSV parsing via fstream and sstream
+An alternative function using fstream and sstream is commented at the bottom of the code, instead of using the fast cpp csv parser library.
+
+## Python Version (For Prototyping)
+The Python version (clob.py) provides a simplified version of the matching engine logic, using defaultdict and deque to simulate price-time priority. Simple for visualization and concept validation but not optimized for speed.
+
+## CSV Generator
+The CSV generator (csv_generator.cpp) creates randomized synthetic order flow data to test the matching engine. It supports both Add and Cancel orders, with customizable paramaters for:
+- Number of orders
+- Cancel Rate
+- Limit vs Market Order Ratio
+- Random tickers, sides, prices, and volumes
+
+The generated CSV file is compatible with the C++ matching engine with Cancel-Enabled Mode. Placeholder values of -1 are filled for N/A cells.
+
+## Features
+
+| Feature                       | Description                                                                  |
+| ------------------------------|------------------------------------------------------------------------------|
+| Number of Orders              | Specify the size of the input flow data                                      |
+| Cancel Rate                   | Adjustable Add-to-Cancel rates                                               |
+| Limit vs Market Order Ratio   | Adjustable Limit-t0-Market order rates                                       |
+| Randomized Orders             | Random generation of ticker, side, price and volume                          |
+| ID Tracking Logic             | Maintains a dynamic array of valid Limit order IDs for cancellation          |
+| Cancel Order Support          | Cancel outstanding limit orders by referencing order ID                      |
+
+## Sample CSV Output Format
+ID	Ticker	Action	Type	Side	Price	Volume	Cancel_Target_ID
+0	2211	Add	M	Sell	-1	402	-1
+1	1131	Add	M	Sell	-1	380	-1
+2	1131	Add	L	Buy	76.03	69	-1
+3	1131	Add	M	Buy	-1	558	-1
+4	-1	Cancel	-1	-1	-1	-1	2
+5	2313	Add	M	Buy	-1	138	-1
+
+| Field                         | Description                                                                  |
+| ------------------------------|------------------------------------------------------------------------------|
+| ID                            | Unique order ID                                                              |
+| Ticker                        | Numeric ticker symbol                                                        |
+| Action                        | "Add" or "Cancel"                                                            |
+| Type                          | "Limit" or "Market"                                                          |
+| Side                          | "Buy" or "Sell"                                                              |
+| Price                         | -1 for Market Orders                                                         |
+| Volume                        | Order size                                                                   |
+| Cancel_Target_ID              | ID of the limit order to cancel, -1 if not a cancel                          |
+
+## Example Outputs
+Here is how the engine behaves during a typical query session:
+
+### C++ (Add-Only Orders)
+<img width="412" height="28" alt="Input Query C++" src="https://github.com/user-attachments/assets/ebb46dbd-4e9c-4c48-8512-7db8c402aacd" />
+
+### With trading ladder view
+<img width="409" height="511" alt="Trading Ladder View (Add-Only)" src="https://github.com/user-attachments/assets/3e34ba41-6152-47d9-a9f7-f68f4abfd972" />
+
+### With snapshot view
+<img width="405" height="496" alt="Snapshot View (Add-Only)" src="https://github.com/user-attachments/assets/b79f296f-72bd-45a8-8e1c-48120d1b5396" />
+
+### C++ (Add and Cancel Orders)
+<img width="396" height="233" alt="Trading Ladder View (Add and Cancel)" src="https://github.com/user-attachments/assets/d1950ba5-2b0b-45ad-a295-1efdb3bc18de" />
+
+### C++ Exiting Query
+<img width="745" height="62" alt="Exiting Query C++" src="https://github.com/user-attachments/assets/dcc8790a-81f4-4bd0-8446-a6d57e49668e" />
+
+### Python (Add-Only Orders)
+<img width="181" height="354" alt="Python Query (Add-Only)" src="https://github.com/user-attachments/assets/bf658e0c-fd1c-418f-a4d6-9f80d7f80822" />
+
+### Example CSV Generation
+<img width="152" height="253" alt="image" src="https://github.com/user-attachments/assets/52bdb13e-576b-488d-a909-98cec89fdd1d" />
