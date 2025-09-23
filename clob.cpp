@@ -36,7 +36,7 @@ public:
 
 private:
     unordered_map<int, unordered_map<string, map<double, deque<Order>>>> order_book; // order_book, sorted by: ticker > buy/sell > prices > deques (FIFO)
-    unordered_map<int, tuple<int, string,  double>> order_index;
+    unordered_map<int, tuple<int, string,  double>> order_index; // hash map of all outstanding limit orders
     double pnl = 0; // tracks total pnl, only matched orders realise PnL, cancelled orders do not affect PnL
 };
 
@@ -616,4 +616,5 @@ void OrderBook::reset(){
 //         // cout << endl;
 //     }
 //     return orders;
+
 // };
