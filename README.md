@@ -38,8 +38,8 @@ The engine maintains an order_book, structured as:
 
 ```cpp
 unordered_map<int, unordered_map<string, map<double, deque<Order>>>>
-//             ^                    ^           ^           ^
-//           ticker               side        price    order queue (FIFO)
+               ^                    ^           ^           ^
+             ticker               side        price    order queue (FIFO)
 ```
 
 - Buy orders match the lowest sell price first
